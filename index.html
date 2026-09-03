@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Myprofitland — Kalkulator Produksi</title>
+<meta name="theme-color" content="#1B1D21">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Myprofitland">
+<link id="manifest-link" rel="manifest" href="">
+<style>
+  :root{
+    --bg:#1B1D21; --panel:#24272C; --panelAlt:#2A2E34; --row:#22252A;
+    --border:#3A3F47; --borderSoft:#33373E; --text:#EDEAE1; --textMuted:#9BA0A6;
+    --textFaint:#6D7278; --brass:#C9974C; --brassSoft:#9C7B45; --green:#8FB37E; --red:#C97A64;
+    --fontHead: Roboto, "Segoe UI", system-ui, -apple-system, sans-serif;
+    --fontMono: "Roboto Mono", "SFMono-Regular", Consolas, monospace;
+  }
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; padding:0; background:var(--bg); color:var(--text); font-family:var(--fontHead); }
+  input[type=number]::-webkit-inner-spin-button,
+  input[type=number]::-webkit-outer-spin-button{ opacity:.5; }
+  ::selection{ background:#C9974C55; }
+
+  .install-banner{ background:var(--panelAlt); border-bottom:1px solid var(--border); padding:8px 16px;
+    font-size:12px; color:var(--textFaint); text-align:center; }
+
+  .header{ border-bottom:1px solid var(--border); background:var(--panel); }
+  .header-inner{ max-width:1040px; margin:0 auto; padding:20px 20px 18px; display:flex; justify-content:space-between;
+    align-items:flex-end; flex-wrap:wrap; gap:12px; }
+  .eyebrow{ color:var(--textFaint); font-size:12.5px; font-family:var(--fontMono); margin-bottom:4px; }
+  h1{ margin:0; color:var(--text); font-size:26px; font-weight:700; letter-spacing:-0.3px; }
+  .header-actions{ display:flex; gap:8px; position:relative; }
+
+  .btn-ghost{ display:inline-flex; align-items:center; gap:6px; background:transparent; border:1px solid var(--border);
+    color:var(--textMuted); border-radius:7px; padding:8px 12px; font-size:13px; cursor:pointer; font-family:var(--fontHead); }
+  .btn-solid{ display:inline-flex; align-items:center; gap:6px; background:var(--brass); border:none; color:#201A0F;
+    border-radius:7px; padding:8px 14px; font-size:13px; font-weight:600; cursor:pointer; font-family:var(--fontHead); }
+  #install-btn.hidden, .hidden{ display:none !important; }
+
+  .picker{ position:absolute; top:calc(100% + 6px); right:0; background:var(--panelAlt); border:1px solid var(--border);
+    border-radius:8px; min-width:220px; z-index:10; overflow:hidden; max-height:260px; overflow-y:auto; }
+  .picker-empty{ padding:12px 14px; color:var(--textFaint); font-size:13px; }
+  .picker-item{ display:flex; justify-content:space-between; align-items:center; padding:10px 12px; cursor:pointer;
+    border-bottom:1px solid var(--borderSoft); font-size:13.5px; }
+  .picker-item:hover{ background:var(--row); }
+  .picker-del{ color:var(--textFaint); flex-shrink:0; padding-left:10px; }
+
+  .wrap{ max-width:1040px; margin:0 auto; padding:20px; }
+  .grid{ display:grid; grid-template-columns:1fr; gap:20px; }
+  @media (min-width:900px){ .grid{ grid-template-columns:1.35fr 1fr; align-items:start; } }
+
+  .col-left{ display:flex; flex-direction:column; gap:18px; }
+  .panel{ background:var(--panel); border:1px solid var(--border); border-radius:10px; padding:18px; }
+  .receipt{ position:sticky; top:20px; border-top:2px dashed var(--brassSoft); }
+
+  .section-title{ display:flex; align-items:center; gap:8px; margin-bottom:14px; }
+  .section-title .bar{ width:4px; height:16px; background:var(--brass); border-radius:2px; }
+  .section-title h2{ font-family:var(--fontHead); font-size:15px; color:var(--text); font-weight:600; margin:0; letter-spacing:.2px; }
+
+  label{ display:block; font-size:12.5px; color:var(--textMuted); margin-bottom:5px; }
+  input[type=text], input[type=number], input:not([type]){
+    width:100%; background:var(--panelAlt); border:1px solid var(--border); border-radius:6px; padding:8px 10px;
+    color:var(--text); font-family:var(--fontMono); font-size:14px; outline:none;
+  }
+  #f-name, #f-curName, #f-saveName{ font-family:var(--fontHead); }
+  input:focus{ border-color:var(--brass); }
+
+  .row-2{ display:grid; grid-template-columns:2fr 1fr; gap:12px; }
+  .row-2-eq{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .hint{ font-size:12px; color:var(--textFaint); margin-top:8px; }
+
+  .ing-head{ display:grid; grid-template-columns:1fr 90px 100px 28px; gap:8px; padding:0 2px 6px; }
+  .ing-head span{ font-size:11px; color:var(--textFaint); font-family:var(--fontMono); }
+  .ing-row{ display:grid; grid-template-columns:1fr 90px 100px 28px; gap:8px; margin-bottom:8px; align-items:center; }
+  .ing-del{ background:transparent; border:none; cursor:pointer; color:var(--textFaint); font-size:18px; line-height:1; }
+
+  .market-row{ display:flex; gap:8px; margin-bottom:14px; }
+  .toggle-btn{ flex:1; padding:9px 12px; border-radius:7px; border:1px solid var(--border); background:transparent;
+    color:var(--textMuted); font-size:13px; font-family:var(--fontHead); cursor:pointer; }
+  .toggle-btn.active{ border-color:var(--brass); background:#C9974C1F; color:var(--brass); font-weight:600; }
+
+  .margin-row{ display:flex; align-items:center; gap:14px; }
+  .margin-row input[type=range]{ flex:1; accent-color:var(--brass); }
+  .margin-num-wrap{ width:74px; }
+
+  .lline{ display:flex; justify-content:space-between; padding:5px 0; font-size:13.5px; color:var(--textMuted); }
+  .lline.bold{ color:var(--text); font-weight:600; }
+  .lline.sub{ font-size:12px; color:var(--textFaint); }
+  .lline .mono{ font-family:var(--fontMono); font-size:13.5px; color:var(--text); font-weight:500; }
+  .lline.bold .mono{ font-weight:600; }
+  .mono.green{ color:var(--green) !important; }
+  .mono.red{ color:var(--red) !important; }
+  .hr{ border-top:1px solid var(--border); margin:10px 0; }
+
+  .price-box{ background:var(--row); border:1px solid var(--borderSoft); border-radius:8px; padding:14px 16px; margin-bottom:16px; }
+  .price-label{ font-size:12.5px; color:var(--textMuted); margin-bottom:4px; }
+  .price-value{ font-family:var(--fontMono); font-size:26px; color:var(--brass); font-weight:600; }
+  .price-value .unit{ font-size:14px; color:var(--textFaint); }
+  .price-sub-cur{ font-family:var(--fontMono); font-size:13px; color:var(--textMuted); margin-top:2px; }
+  .price-profit{ font-size:12.5px; color:var(--green); margin-top:6px; }
+
+  .batch-title{ font-size:12.5px; color:var(--textMuted); margin-bottom:8px; font-family:var(--fontHead); font-weight:600; }
+
+  .save-row{ display:flex; gap:8px; margin-top:16px; padding-top:16px; border-top:1px solid var(--border); }
+  .save-row input{ flex:1; }
+  .status{ font-size:12px; color:var(--brass); margin-top:8px; font-family:var(--fontMono); min-height:14px; }
+  .save-note{ font-size:11.5px; color:var(--textFaint); margin-top:6px; }
+</style>
+</head>
+<body>
+
+  <div class="install-banner">
+    Untuk memasang di HP Android: buka file ini di Chrome → menu ⋮ → <b>Tambahkan ke Layar Utama</b>.
+    <button id="install-btn" class="btn-ghost hidden" style="margin-left:8px;">Instal Aplikasi</button>
+  </div>
+
+  <div class="header">
+    <div class="header-inner">
+      <div>
+        <div class="eyebrow">Myprofitland — biaya produksi</div>
+        <h1>Kalkulator Harga Jual</h1>
+      </div>
+      <div class="header-actions">
+        <button class="btn-ghost" onclick="togglePicker()">📂 Muat Resep</button>
+        <button class="btn-ghost" onclick="newRecipe()">＋ Resep Baru</button>
+        <div id="picker" class="picker hidden"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <div class="grid">
+
+      <div class="col-left">
+
+        <div class="panel">
+          <div class="section-title"><span class="bar"></span><h2>Item</h2></div>
+          <div class="row-2">
+            <div>
+              <label>Nama item</label>
+              <input id="f-name" oninput="onField('name', this.value)">
+            </div>
+            <div>
+              <label>Jumlah diproduksi</label>
+              <input id="f-qty" type="number" step="any" inputmode="decimal" oninput="onNumField('quantity', this.value)">
+            </div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="section-title"><span class="bar"></span><h2>Bahan baku per unit</h2></div>
+          <div class="ing-head">
+            <span>Nama bahan</span><span>Qty/unit</span><span>Gold/satuan</span><span></span>
+          </div>
+          <div id="ing-list"></div>
+          <button class="btn-ghost" onclick="addIngredient()">＋ Tambah bahan</button>
+        </div>
+
+        <div class="panel">
+          <div class="section-title"><span class="bar"></span><h2>Kerja & lisensi</h2></div>
+          <div class="row-2-eq" style="margin-bottom:12px;">
+            <div>
+              <label>Jam kerja per unit</label>
+              <input id="f-workHours" type="number" step="any" inputmode="decimal" oninput="onNumField('workHoursPerUnit', this.value)">
+            </div>
+            <div>
+              <label>Biaya kerja per jam (<span id="hourlyRateCurLabel">Koin</span>)</label>
+              <input id="f-hourlyRate" type="number" step="any" inputmode="decimal" oninput="onNumField('hourlyRate', this.value)">
+            </div>
+          </div>
+          <div class="hint" style="margin-top:-4px; margin-bottom:12px;">Dikonversi otomatis ke Gold memakai kurs mata uang lokal di bawah.</div>
+          <div class="row-2-eq">
+            <div>
+              <label>Harga lisensi (Euro)</label>
+              <input id="f-licensePrice" type="number" step="any" inputmode="decimal" oninput="onNumField('licensePriceEuro', this.value)">
+            </div>
+            <div>
+              <label>Kapasitas lisensi (uses)</label>
+              <input id="f-licenseUses" type="number" step="any" inputmode="decimal" oninput="onNumField('licenseUses', this.value)">
+            </div>
+          </div>
+          <div style="margin-top:12px;">
+            <label>Kurs — 1 Euro setara berapa Gold</label>
+            <input id="f-exchangeRate" type="number" step="any" inputmode="decimal" oninput="onNumField('exchangeRate', this.value)">
+            <div class="hint">Dipakai untuk menyatukan biaya lisensi (Euro) ke dalam total biaya produksi (Gold).</div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="section-title"><span class="bar"></span><h2>Mata uang lokal</h2></div>
+          <div class="row-2-eq">
+            <div>
+              <label>Nama mata uang</label>
+              <input id="f-curName" oninput="onField('localCurrencyName', this.value)">
+            </div>
+            <div>
+              <label>Kurs — 1 Gold = ? mata uang lokal</label>
+              <input id="f-curRate" type="number" step="any" inputmode="decimal" oninput="onNumField('localCurrencyRate', this.value)">
+            </div>
+          </div>
+          <div class="hint">Nilai mata uang lokal mengikuti harga Gold — semua hasil di panel kanan juga ditampilkan dalam mata uang ini.</div>
+        </div>
+
+        <div class="panel">
+          <div class="section-title"><span class="bar"></span><h2>Pasar & pajak</h2></div>
+          <div class="market-row">
+            <button id="market-btn-local" class="toggle-btn" onclick="setMarket('local')">Pasar Lokal</button>
+            <button id="market-btn-global" class="toggle-btn" onclick="setMarket('global')">Pasar Global</button>
+          </div>
+          <div class="row-2-eq">
+            <div>
+              <label>Pajak pasar lokal</label>
+              <input id="f-taxLocal" type="number" step="any" inputmode="decimal" oninput="onNumField('taxLocalPercent', this.value)">
+            </div>
+            <div>
+              <label>Pajak pasar global</label>
+              <input id="f-taxGlobal" type="number" step="any" inputmode="decimal" oninput="onNumField('taxGlobalPercent', this.value)">
+            </div>
+          </div>
+          <div class="hint">Harga jual otomatis digenapkan supaya untung bersih setelah pajak tetap sesuai margin yang kamu atur.</div>
+        </div>
+
+        <div class="panel">
+          <div class="section-title"><span class="bar"></span><h2>Margin & harga jual</h2></div>
+          <div class="market-row">
+            <button id="mode-btn-percent" class="toggle-btn" onclick="setPricingMode('percent')">Berdasarkan margin %</button>
+            <button id="mode-btn-manual" class="toggle-btn" onclick="setPricingMode('manual')">Masukkan harga jual</button>
+          </div>
+
+          <div id="percent-mode">
+            <div class="margin-row">
+              <input id="margin-range" type="range" min="0" max="200" step="1" oninput="onMarginRange(this.value)">
+              <div class="margin-num-wrap">
+                <input id="margin-num" type="number" step="any" inputmode="decimal" oninput="onMarginNum(this.value)">
+              </div>
+            </div>
+            <div class="hint">Markup di atas total biaya produksi per unit — harga jual dihitung otomatis.</div>
+          </div>
+
+          <div id="manual-mode">
+            <label>Harga jual di pasar (Gold)</label>
+            <input id="f-manualPrice" type="number" step="any" inputmode="decimal" oninput="onNumField('manualPrice', this.value)">
+            <div id="manual-helper" class="hint"></div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="panel receipt">
+        <div class="section-title"><span class="bar"></span><h2>Hasil</h2></div>
+        <div id="ledger-body"></div>
+        <div class="save-row">
+          <input id="f-saveName" placeholder="Nama resep untuk disimpan" oninput="state.saveName=this.value">
+          <button class="btn-solid" onclick="saveRecipe()">💾 Simpan</button>
+        </div>
+        <div id="status-msg" class="status"></div>
+        <div class="save-note">Resep tersimpan langsung di penyimpanan browser HP-mu (bukan di server), jadi tetap ada selama kamu tidak menghapus data situs ini.</div>
+      </div>
+
+    </div>
+  </div>
+
+<script>
+// ---------- state ----------
+function cryptoRandomId() {
+  return Math.random().toString(36).slice(2, 10);
+}
+
+function defaultState() {
+  return {
+    id: cryptoRandomId(),
+    name: "Milk Jug",
+    quantity: 300,
+    ingredients: [
+      { name: "Processed Milk", qtyPerUnit: 0.2, price: 5 },
+      { name: "Electricity", qtyPerUnit: 0.07, price: 2 },
+      { name: "Water", qtyPerUnit: 0.07, price: 1 },
+    ],
+    workHoursPerUnit: 0.3,
+    hourlyRate: 1000,
+    licensePriceEuro: 4.99,
+    licenseUses: 1800,
+    exchangeRate: 1000,
+    market: "global",
+    taxLocalPercent: 0,
+    taxGlobalPercent: 15,
+    pricingMode: "percent",
+    marginPercent: 30,
+    manualPrice: 0,
+    localCurrencyName: "Koin",
+    localCurrencyRate: 100,
+    saveName: "Milk Jug",
+  };
+}
+
+let state = defaultState();
+
+const STORAGE_KEY = "myprofitland_recipes_v1";
+
+function loadSavedRecipes() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch (e) {
+    return [];
+  }
+}
+
+function persistRecipes(list) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+}
+
+function fmt(n, d) {
+  if (d === undefined) d = 2;
+  const v = Number(n);
+  if (!isFinite(v)) return "0";
+  return v.toLocaleString("id-ID", { minimumFractionDigits: d, maximumFractionDigits: d });
+}
+
+function escapeAttr(s) {
+  return String(s == null ? "" : s).replace(/"/g, "&quot;");
+}
+
+function escapeHtml(s) {
+  return String(s == null ? "" : s)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+// ---------- calculation ----------
+function calc() {
+  const ingredients = state.ingredients;
+  const materialCost = ingredients.reduce(
+    (s, i) => s + (Number(i.qtyPerUnit) || 0) * (Number(i.price) || 0),
+    0
+  );
+  const curRate = Number(state.localCurrencyRate) || 0;
+  const curName = state.localCurrencyName || "Koin";
+  const hourlyRateGold = curRate > 0 ? (Number(state.hourlyRate) || 0) / curRate : 0;
+  const workCost = (Number(state.workHoursPerUnit) || 0) * hourlyRateGold;
+  const licenseUses = Number(state.licenseUses) || 0;
+  const licenseCostEuroPerUnit = licenseUses > 0 ? (Number(state.licensePriceEuro) || 0) / licenseUses : 0;
+  const licenseCostGold = licenseCostEuroPerUnit * (Number(state.exchangeRate) || 0);
+  const totalCost = materialCost + workCost + licenseCostGold;
+
+  const taxPercent = state.market === "local" ? Number(state.taxLocalPercent) || 0 : Number(state.taxGlobalPercent) || 0;
+  const taxRate = Math.min(Math.max(taxPercent, 0), 99) / 100;
+
+  const margin = Number(state.marginPercent) || 0;
+  let sellPrice, taxAmount, netNeeded, targetProfit, profit, impliedMargin;
+
+  if (state.pricingMode === "manual") {
+    sellPrice = Number(state.manualPrice) || 0;
+    taxAmount = sellPrice * taxRate;
+    netNeeded = sellPrice - taxAmount;
+    profit = netNeeded - totalCost;
+    targetProfit = profit;
+    impliedMargin = totalCost > 0 ? (profit / totalCost) * 100 : 0;
+  } else {
+    targetProfit = totalCost * (margin / 100);
+    netNeeded = totalCost + targetProfit;
+    sellPrice = taxRate > 0 ? netNeeded / (1 - taxRate) : netNeeded;
+    taxAmount = sellPrice - netNeeded;
+    profit = sellPrice - taxAmount - totalCost;
+    impliedMargin = margin;
+  }
+
+  const qty = Number(state.quantity) || 0;
+  const batchCost = totalCost * qty;
+  const batchRevenue = sellPrice * qty;
+  const batchTax = taxAmount * qty;
+  const batchProfit = profit * qty;
+
+  return {
+    materialCost, workCost, licenseCostGold, totalCost,
+    taxPercent, margin, targetProfit, netNeeded, sellPrice, taxAmount, profit, impliedMargin,
+    qty, batchCost, batchRevenue, batchTax, batchProfit, curRate, curName,
+  };
+}
+
+// ---------- field updates ----------
+function onField(key, val) {
+  state[key] = val;
+  if (key === "localCurrencyName") refreshCurrencyLabels();
+  updateResultsOnly();
+}
+function onNumField(key, val) {
+  state[key] = val === "" ? "" : Number(val);
+  updateResultsOnly();
+}
+function onIngInput(idx, field, val) {
+  if (field === "name") state.ingredients[idx][field] = val;
+  else state.ingredients[idx][field] = val === "" ? "" : Number(val);
+  updateResultsOnly();
+}
+
+function onMarginRange(v) {
+  state.marginPercent = Number(v);
+  const num = document.getElementById("margin-num");
+  if (num) num.value = v;
+  updateResultsOnly();
+}
+function onMarginNum(v) {
+  state.marginPercent = v === "" ? 0 : Number(v);
+  const range = document.getElementById("margin-range");
+  if (range) range.value = state.marginPercent;
+  updateResultsOnly();
+}
+
+// ---------- ingredients list ----------
+function addIngredient() {
+  state.ingredients.push({ name: "", qtyPerUnit: 0, price: 0 });
+  renderIngredients();
+  updateResultsOnly();
+}
+function removeIngredient(idx) {
+  state.ingredients.splice(idx, 1);
+  renderIngredients();
+  updateResultsOnly();
+}
+function renderIngredients() {
+  const el = document.getElementById("ing-list");
+  el.innerHTML = state.ingredients
+    .map(
+      (ing, idx) => `
+    <div class="ing-row">
+      <input value="${escapeAttr(ing.name)}" placeholder="mis. Processed Milk" oninput="onIngInput(${idx},'name',this.value)">
+      <input type="number" step="any" inputmode="decimal" value="${ing.qtyPerUnit}" oninput="onIngInput(${idx},'qtyPerUnit',this.value)">
+      <input type="number" step="any" inputmode="decimal" value="${ing.price}" oninput="onIngInput(${idx},'price',this.value)">
+      <button class="ing-del" onclick="removeIngredient(${idx})" title="Hapus bahan">&times;</button>
+    </div>`
+    )
+    .join("");
+}
+
+// ---------- market & pricing mode ----------
+function setMarket(m) {
+  state.market = m;
+  renderMarketButtons();
+  updateResultsOnly();
+}
+function renderMarketButtons() {
+  document.getElementById("market-btn-local").classList.toggle("active", state.market === "local");
+  document.getElementById("market-btn-global").classList.toggle("active", state.market === "global");
+}
+
+function setPricingMode(mode) {
+  const c = calc();
+  if (mode === "percent") {
+    state.marginPercent = Number(c.impliedMargin.toFixed(1));
+  } else {
+    if (!state.manualPrice) state.manualPrice = Number(c.sellPrice.toFixed(2));
+  }
+  state.pricingMode = mode;
+  renderPricingPanel();
+  updateResultsOnly();
+}
+function renderPricingPanel() {
+  document.getElementById("mode-btn-percent").classList.toggle("active", state.pricingMode === "percent");
+  document.getElementById("mode-btn-manual").classList.toggle("active", state.pricingMode === "manual");
+  document.getElementById("percent-mode").style.display = state.pricingMode === "percent" ? "block" : "none";
+  document.getElementById("manual-mode").style.display = state.pricingMode === "manual" ? "block" : "none";
+  setVal("margin-range", state.marginPercent);
+  setVal("margin-num", state.marginPercent);
+  setVal("f-manualPrice", state.manualPrice);
+}
+
+// ---------- results ----------
+function updateResultsOnly() {
+  const c = calc();
+  const marketLabel = state.market === "local" ? "Pasar Lokal" : "Pasar Global";
+  const marginLabel =
+    state.pricingMode === "manual"
+      ? `+ Margin tersirat ${fmt(c.impliedMargin, 1)}%`
+      : `+ Margin target ${fmt(c.margin, 0)}%`;
+
+  document.getElementById("ledger-body").innerHTML = `
+    <div class="lline"><span>Bahan baku</span><span class="mono">${fmt(c.materialCost)}</span></div>
+    <div class="lline"><span>Kerja (${fmt(state.workHoursPerUnit, 2)} jam)</span><span class="mono">${fmt(c.workCost)}</span></div>
+    <div class="lline"><span>Lisensi (diamortisasi)</span><span class="mono">${fmt(c.licenseCostGold)}</span></div>
+    <div class="hr"></div>
+    <div class="lline bold"><span>Total biaya / unit</span><span class="mono">${fmt(c.totalCost)}</span></div>
+    <div class="lline"><span>${marginLabel}</span><span class="mono green">${fmt(c.targetProfit)}</span></div>
+    <div class="lline"><span>Subtotal bersih</span><span class="mono">${fmt(c.netNeeded)}</span></div>
+    <div class="lline"><span>+ Pajak ${marketLabel} (${fmt(c.taxPercent, 0)}%)</span><span class="mono red">${fmt(c.taxAmount)}</span></div>
+    <div class="hr"></div>
+    <div class="price-box">
+      <div class="price-label">Harga jual di ${marketLabel}</div>
+      <div class="price-value">${fmt(c.sellPrice)} <span class="unit">Gold</span></div>
+      <div class="price-sub-cur">&asymp; ${fmt(c.sellPrice * c.curRate)} ${escapeHtml(c.curName)}</div>
+      <div class="price-profit">Untung bersih ${fmt(c.profit)} Gold / unit setelah pajak</div>
+    </div>
+    <div class="batch-title">Total untuk ${fmt(c.qty, 0)} unit</div>
+    <div class="lline"><span>Total biaya</span><span class="mono">${fmt(c.batchCost)}</span></div>
+    <div class="lline"><span>Total harga jual</span><span class="mono">${fmt(c.batchRevenue)}</span></div>
+    <div class="lline"><span>Total pajak</span><span class="mono red">${fmt(c.batchTax)}</span></div>
+    <div class="lline bold"><span>Total untung bersih</span><span class="mono green">${fmt(c.batchProfit)}</span></div>
+    <div class="lline sub"><span>&asymp; dalam ${escapeHtml(c.curName)}</span><span class="mono">${fmt(c.batchProfit * c.curRate)}</span></div>
+  `;
+
+  const helper = document.getElementById("manual-helper");
+  if (helper) {
+    helper.innerHTML = `Margin tersirat dari harga ini: <span class="mono ${c.profit >= 0 ? "green" : "red"}">${fmt(
+      c.impliedMargin,
+      1
+    )}%</span> (${fmt(c.profit)} Gold untung/unit setelah pajak)`;
+  }
+}
+
+// ---------- save / load / delete ----------
+let flashTimer;
+function flash(msg) {
+  const el = document.getElementById("status-msg");
+  el.textContent = msg;
+  clearTimeout(flashTimer);
+  flashTimer = setTimeout(() => {
+    el.textContent = "";
+  }, 2500);
+}
+
+function saveRecipe() {
+  const nameInput = document.getElementById("f-saveName");
+  const name = (nameInput.value || "").trim() || state.name || "Resep tanpa nama";
+  const toSave = JSON.parse(JSON.stringify(state));
+  toSave.name = name;
+  toSave.saveName = name;
+  if (!toSave.id) toSave.id = cryptoRandomId();
+  state.id = toSave.id;
+  state.name = name;
+
+  let list = loadSavedRecipes();
+  list = list.filter((r) => r.id !== toSave.id);
+  list.push(toSave);
+  try {
+    persistRecipes(list);
+    flash(`Resep "${name}" tersimpan`);
+  } catch (e) {
+    flash("Gagal menyimpan: " + (e && e.message ? e.message : "kesalahan tidak dikenal"));
+  }
+}
+
+function togglePicker() {
+  const picker = document.getElementById("picker");
+  if (picker.classList.contains("hidden")) {
+    renderPicker();
+    picker.classList.remove("hidden");
+  } else {
+    picker.classList.add("hidden");
+  }
+}
+function renderPicker() {
+  const list = loadSavedRecipes();
+  const picker = document.getElementById("picker");
+  if (list.length === 0) {
+    picker.innerHTML = '<div class="picker-empty">Belum ada resep tersimpan</div>';
+    return;
+  }
+  picker.innerHTML = list
+    .map(
+      (r) => `
+    <div class="picker-item" onclick="loadRecipeById('${r.id}')">
+      <span>${escapeHtml(r.name)}</span>
+      <span class="picker-del" onclick="event.stopPropagation(); deleteRecipeById('${r.id}')">&times;</span>
+    </div>`
+    )
+    .join("");
+}
+function loadRecipeById(id) {
+  const list = loadSavedRecipes();
+  const found = list.find((r) => r.id === id);
+  if (found) {
+    state = JSON.parse(JSON.stringify(found));
+    document.getElementById("picker").classList.add("hidden");
+    fullRender();
+    flash(`Resep "${found.name}" dimuat`);
+  }
+}
+function deleteRecipeById(id) {
+  let list = loadSavedRecipes();
+  list = list.filter((r) => r.id !== id);
+  persistRecipes(list);
+  renderPicker();
+  flash("Resep dihapus");
+}
+
+function newRecipe() {
+  state = defaultState();
+  state.name = "Resep Baru";
+  state.id = cryptoRandomId();
+  state.ingredients = [{ name: "", qtyPerUnit: 0, price: 0 }];
+  state.saveName = "Resep Baru";
+  document.getElementById("picker").classList.add("hidden");
+  fullRender();
+}
+
+// ---------- full render ----------
+function setVal(id, val) {
+  const el = document.getElementById(id);
+  if (el) el.value = val;
+}
+function refreshCurrencyLabels() {
+  const el = document.getElementById("hourlyRateCurLabel");
+  if (el) el.textContent = state.localCurrencyName || "Koin";
+}
+function fullRender() {
+  setVal("f-name", state.name);
+  setVal("f-qty", state.quantity);
+  setVal("f-workHours", state.workHoursPerUnit);
+  setVal("f-hourlyRate", state.hourlyRate);
+  setVal("f-licensePrice", state.licensePriceEuro);
+  setVal("f-licenseUses", state.licenseUses);
+  setVal("f-exchangeRate", state.exchangeRate);
+  setVal("f-curName", state.localCurrencyName);
+  setVal("f-curRate", state.localCurrencyRate);
+  setVal("f-taxLocal", state.taxLocalPercent);
+  setVal("f-taxGlobal", state.taxGlobalPercent);
+  setVal("f-manualPrice", state.manualPrice);
+  setVal("f-saveName", state.saveName || state.name);
+
+  renderIngredients();
+  renderMarketButtons();
+  renderPricingPanel();
+  refreshCurrencyLabels();
+  updateResultsOnly();
+}
+
+// ---------- PWA install plumbing ----------
+let deferredPrompt;
+window.addEventListener("beforeinstallprompt", (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+  const btn = document.getElementById("install-btn");
+  if (btn) btn.classList.remove("hidden");
+});
+
+function setupManifestAndIcon() {
+  const svgIcon =
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">' +
+    '<rect width="100" height="100" rx="18" fill="#1B1D21"/>' +
+    '<circle cx="50" cy="50" r="32" fill="#C9974C"/>' +
+    '<text x="50" y="63" font-family="Arial, sans-serif" font-size="34" font-weight="700" fill="#1B1D21" text-anchor="middle">M</text>' +
+    "</svg>";
+  const iconDataUri = "data:image/svg+xml," + encodeURIComponent(svgIcon);
+
+  const manifest = {
+    name: "Myprofitland",
+    short_name: "Myprofitland",
+    start_url: ".",
+    display: "standalone",
+    background_color: "#1B1D21",
+    theme_color: "#1B1D21",
+    icons: [{ src: iconDataUri, sizes: "any", type: "image/svg+xml", purpose: "any maskable" }],
+  };
+  try {
+    const blob = new Blob([JSON.stringify(manifest)], { type: "application/manifest+json" });
+    const url = URL.createObjectURL(blob);
+    const link = document.getElementById("manifest-link");
+    if (link) link.setAttribute("href", url);
+  } catch (e) {
+    /* manifest optional */
+  }
+
+  const linkIcon = document.createElement("link");
+  linkIcon.rel = "icon";
+  linkIcon.href = iconDataUri;
+  document.head.appendChild(linkIcon);
+
+  const appleIcon = document.createElement("link");
+  appleIcon.rel = "apple-touch-icon";
+  appleIcon.href = iconDataUri;
+  document.head.appendChild(appleIcon);
+}
+
+function initApp() {
+  setupManifestAndIcon();
+  fullRender();
+
+  const installBtn = document.getElementById("install-btn");
+  if (installBtn) {
+    installBtn.addEventListener("click", async () => {
+      if (!deferredPrompt) return;
+      deferredPrompt.prompt();
+      await deferredPrompt.userChoice;
+      deferredPrompt = null;
+      installBtn.classList.add("hidden");
+    });
+  }
+}
+
+initApp();
+</script>
+</body>
+</html>
