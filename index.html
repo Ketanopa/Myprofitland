@@ -9,7 +9,9 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Myprofitland">
-<link id="manifest-link" rel="manifest" href="">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
 <style>
   :root{
     --bg:#1B1D21; --panel:#24272C; --panelAlt:#2A2E34; --row:#22252A;
@@ -638,47 +640,7 @@ window.addEventListener("beforeinstallprompt", (e) => {
   if (btn) btn.classList.remove("hidden");
 });
 
-function setupManifestAndIcon() {
-  const icon192 = new URL("icon-192.png", document.baseURI).href;
-  const icon512 = new URL("icon-512.png", document.baseURI).href;
-
-  const manifest = {
-    name: "Myprofitland",
-    short_name: "Myprofitland",
-    description: "Kalkulator biaya produksi dan harga jual untuk Myprofitland.",
-    start_url: ".",
-    display: "standalone",
-    background_color: "#1B1D21",
-    theme_color: "#1B1D21",
-    icons: [
-      { src: icon192, sizes: "192x192", type: "image/png", purpose: "any" },
-      { src: icon192, sizes: "192x192", type: "image/png", purpose: "maskable" },
-      { src: icon512, sizes: "512x512", type: "image/png", purpose: "any" },
-      { src: icon512, sizes: "512x512", type: "image/png", purpose: "maskable" },
-    ],
-  };
-  try {
-    const blob = new Blob([JSON.stringify(manifest)], { type: "application/manifest+json" });
-    const url = URL.createObjectURL(blob);
-    const link = document.getElementById("manifest-link");
-    if (link) link.setAttribute("href", url);
-  } catch (e) {
-    /* manifest optional */
-  }
-
-  const linkIcon = document.createElement("link");
-  linkIcon.rel = "icon";
-  linkIcon.href = icon192;
-  document.head.appendChild(linkIcon);
-
-  const appleIcon = document.createElement("link");
-  appleIcon.rel = "apple-touch-icon";
-  appleIcon.href = icon192;
-  document.head.appendChild(appleIcon);
-}
-
 function initApp() {
-  setupManifestAndIcon();
   fullRender();
 
   const installBtn = document.getElementById("install-btn");
